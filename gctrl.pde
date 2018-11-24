@@ -1,4 +1,8 @@
 import java.awt.event.KeyEvent;
+import javax.swing.JOptionPane;
+import processing.serial.*;
+
+Serial port = null;
 
 String portname = null;
 
@@ -6,11 +10,30 @@ boolean desenhando = false;
 String[] gcode;
 int i = 0;
 
+void abrirPortaSerial()
+{}
+
+
+void selecionarPortaSerial()
+{
+   String result = (String) JOptionPane.showInputDialog(frame,
+    "Selecione a porta serial correspondente ao seu Arduino.",
+    "Selecione a porta serial",
+    JOptionPane.QUESTION_MESSAGE,
+    null,
+    Serial.list(),
+    0);
+    
+  if (result != null) {
+    portname = result;
+    abrirPortaSerial();
+  }
+}
 
 void setup()
 {
   size(300, 150);
-  
+  abrirPortaSerial();
 }
 
 void draw()
@@ -32,7 +55,7 @@ void keyPressed()
     
   if (!desenhando) {
     if (key == 'h') port.write("G90\nG20\nG00 X0.000 Y0.000 Z0.000\n");
-    if (key == 'p') portSerial();
+    if (key == 'p') selecionarPortaSerial();
     
   }
   
