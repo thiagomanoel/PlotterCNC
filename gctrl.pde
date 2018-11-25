@@ -11,7 +11,15 @@ String[] gcode;
 int i = 0;
 
 void abrirPortaSerial()
-{}
+{
+  if (portname == null) return;
+  if (port != null) port.stop();
+  
+  port = new Serial(this, portname, 9600);
+  
+  port.bufferUntil('\n');
+
+}
 
 
 void selecionarPortaSerial()
@@ -98,4 +106,13 @@ void desenho()
   println(gcode[i]);
   port.write(gcode[i] + '\n');
   i++;
+}
+
+void serialEvent(Serial p)
+{
+  String s = p.readStringUntil('\n');
+  println(s.trim());
+  
+  if (s.trim().startsWith("ok")) desenho();
+  if (s.trim().startsWith("erro")) desenho(); 
 }
