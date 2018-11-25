@@ -43,7 +43,6 @@ void draw()
   int y = 24, dy = 12;
   text("INSTRUÇÕES", 12, y); y += dy;
   text("p: selecionar porta serial", 20, y); y += dy;
-  text("h: ponto inicial", 20, y); y += dy;
   text("g: abrir arquivo", 20, y); y += dy;
   text("x: parar desenho", 20, y); y += dy;
   y = height - dy;
@@ -54,7 +53,6 @@ void keyPressed()
 {
     
   if (!desenhando) {
-    if (key == 'h') port.write("G90\nG20\nG00 X0.000 Y0.000 Z0.000\n");
     if (key == 'p') selecionarPortaSerial();
     
   }
@@ -66,9 +64,12 @@ void keyPressed()
     selectInput("Selecione o arquivo:", "selectFile", file);
   }
   
-  if (key == 'x') desenhando = false;
+  if (key == 'x') {
+   desenhando = false;
+   port.write("M300 S50.00 \n");
+   port.write("G90\nG20\nG00 X0.000 Y0.000 Z0.000\n");
 }
-
+}
 void selectFile(File selection) {
   if (selection == null) {
     println("A janela foi fechada ou a seleçao foi cancelada.");
@@ -78,4 +79,23 @@ void selectFile(File selection) {
     if (gcode == null) return;
     desenhando = true;
   }
+}
+
+void desenho()
+{
+  if (!desenhando) return;
+  
+  while (true) {
+    if (i == gcode.length) {
+      desenhando = false;
+      return;
+    }
+    
+    if (gcode[i].trim().length() == 0) i++;
+    else break;
+  }
+  
+  println(gcode[i]);
+  port.write(gcode[i] + '\n');
+  i++;
 }
