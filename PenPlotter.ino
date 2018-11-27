@@ -1,9 +1,9 @@
 #define LINE_BUFFER_LENGTH 512
 
 struct ponto { 
-  float x; 
-  float y; 
-  float z; 
+  float x;
+  float y;
+  float z;
 };
 
 struct ponto posAtuador;
