@@ -1,14 +1,50 @@
+#include <Servo.h>
+#include <AFMotor.h>
+
 #define LINE_BUFFER_LENGTH 512
 
+char STEP = MICROSTEP;
+
+const int passosPorRevolucao = 48; 
+
+
+AF_Stepper motorEixoY(passosPorRevolucao,1);            
+AF_Stepper motorEixoX(passosPorRevolucao,2);  
+
 struct ponto { 
-  float x;
-  float y;
-  float z;
+  float x; 
+  float y; 
+  float z; 
 };
 
 struct ponto posAtuador;
 
-void setup(){}
+float passoInc = 1;
+int passoDelay = 0;
+int linhaDelay = 0;
+int penDelay = 50;
+
+float passosPorMMx = 100.0;
+float passosPorMMy = 100.0;
+
+float Xmin = 0;
+float Xmax = 40;
+float Ymin = 0;
+float Ymax = 40;
+float Zmin = 0;
+float Zmax = 1;
+
+float Xpos = Xmin;
+float Ypos = Ymin;
+float Zpos = Zmax; 
+
+void setup(){
+  Serial.begin( 9600 );
+  
+  motorEixoX.setSpeed(600);
+  motorEixoY.setSpeed(600); 
+  
+ }
 
 
 void loop() 
@@ -158,5 +194,65 @@ void processarLine( char* line, int endLine ) {
   }
 
 
+}
 
+void desenhar(float x1, float y1) {
+
+  if (x1 >= Xmax) { 
+    x1 = Xmax; 
+  }
+  if (x1 <= Xmin) { 
+    x1 = Xmin; 
+  }
+  if (y1 >= Ymax) { 
+    y1 = Ymax; 
+  }
+  if (y1 <= Ymin) { 
+    y1 = Ymin; 
+  }
+
+  //  converter coordenadas para passos
+  x1 = (int)(x1*passosPorMMx);
+  y1 = (int)(y1*passosPorMMy);
+
+  //coordenadas comando anterior
+  float x0 = Xpos;
+  float y0 = Ypos;
+
+// mudança de coordenada
+  long dx = abs(x1-x0);
+  long dy = abs(y1-y0);
+  int sx = x0<x1 ? passoInc : -passoInc; //direçao de movimento dos eixos
+  int sy = y0<y1 ? passoInc : -passoInc;
+
+  long i;
+  long over = 0;
+
+  if (dx > dy) {
+    for (i=0; i<dx; ++i) {            //motor da o numero de passos da diferença entre coordenada anterior e atual(sx ou sy)
+      motorEixoX.onestep(sx,STEP);
+      over+=dy;
+      if (over>=dx) {
+        over-=dx;
+        motorEixoY.onestep(sy,STEP);
+      }
+    delay(passoDelay);
+    }
+  }
+  else {
+    for (i=0; i<dy; ++i) {
+      motorEixoY.onestep(sy,STEP);
+      over+=dx;
+      if (over>=dy) {
+        over-=dy;
+        motorEixoX.onestep(sx,STEP);
+      }
+      delay(passoDelay);
+    }    
+  }
+
+  delay(linhaDelay);
+  //  atualiza posição da caneta
+  Xpos = x1;
+  Ypos = y1;
 }
